@@ -64,9 +64,7 @@ public class Cat : MonoBehaviour
         //      collider.
         // You might want to check the Rigidbody2D scripting documentation
         //      for a useful variable :)
-        
-
-        
+        _collider.enabled = _rigidbody.linearVelocity.y <= 0.0f;
         // STEP 1 -------------------------------------------------------------
     }
 

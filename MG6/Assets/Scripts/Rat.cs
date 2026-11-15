@@ -3,7 +3,7 @@ using UnityEngine;
 public class Rat : MonoBehaviour
 {
     [SerializeField] private float _shrinkAmount;
-    [SerializeField] private float _spawnAmount;
+    [SerializeField] private int _spawnAmount = 5;
     [SerializeField] private GameObject _ratPrefab;
     [SerializeField] private SpriteRenderer _explosionPrefab;
 
@@ -14,6 +14,8 @@ public class Rat : MonoBehaviour
         Color.blue
     };
     private int _colorIndex;
+    public int HitCount { get; private set; }
+    public Color NextColor => _colors[_colorIndex];
 
     // ------------------------------------------------------------------------
     private void OnCollisionEnter2D(Collision2D collision)
@@ -33,8 +35,21 @@ public class Rat : MonoBehaviour
         // Each time the Rat is kicked, the explosion should be a different
         //      color: first yellow, then red, then blue, then looping back
         //      around to yellow, etc.
+        if (collision.collider.CompareTag("Attack"))
+        {
+            for (int i = 0; i < _spawnAmount; i++)
+            {
+                SpawnSmallRat();
+            }
 
-
+            Vector3 scale = transform.localScale;
+            transform.localScale = new Vector3(
+                Mathf.Max(0.25f, scale.x * _shrinkAmount),
+                Mathf.Max(0.25f, scale.y * _shrinkAmount), 1.0f);
+            SpawnExplosion(_colors[_colorIndex]);
+            _colorIndex = (_colorIndex + 1) % _colors.Length;
+            HitCount++;
+        }
         // STEP 2 -------------------------------------------------------------
     }
 
@@ -52,17 +67,23 @@ public class Rat : MonoBehaviour
     {
         GameObject rat = Instantiate(_ratPrefab);
 
-        Vector3 pos = Random.onUnitSphere;
-        rat.transform.position += pos;
+        Vector2 offset = Random.insideUnitCircle * 0.5f;
+        rat.transform.position = transform.position + new Vector3(offset.x, Mathf.Abs(offset.y), 0);
+        rat.AddComponent<PantryRatLifetime>();
+        Rigidbody2D body = rat.GetComponent<Rigidbody2D>();
+        if (body != null)
+        {
+            body.linearVelocity = new Vector2(Random.Range(-3.0f, 3.0f), Random.Range(3.5f, 6.5f));
+        }
 
         // STEP 3 -------------------------------------------------------------
         // Uncomment and fix the below lines to give the small rat a random
         //      rotation correctly.
         // Your game should look exaclty like the finished example.
 
-        //float randomAngle = Random.Range(0, 360);
-        //Vector3 rotationAngles = new Vector3(0, randomAngle, 0);
-        //rat.transform.Rotate(rotationAngles);
+        float randomAngle = Random.Range(0.0f, 360.0f);
+        Vector3 rotationAngles = new Vector3(0, 0, randomAngle);
+        rat.transform.Rotate(rotationAngles);
 
         // STEP 3 -------------------------------------------------------------
     }
